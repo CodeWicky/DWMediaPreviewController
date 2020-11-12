@@ -1,0 +1,43 @@
+PODS:
+  - DWKit/DWComponent/DWFixAdjustCollectionView (0.0.0.12)
+  - DWKit/DWComponent/DWLabel (0.0.0.12)
+  - DWKit/DWUtils/DWOperationCancelFlag (0.0.0.12)
+  - DWMediaPreviewController (0.0.0.36):
+    - DWKit/DWComponent/DWFixAdjustCollectionView (~> 0.0.0.12)
+    - DWKit/DWUtils/DWOperationCancelFlag (~> 0.0.0.8)
+    - DWPlayer (~> 0.0.0.5)
+    - YYImage (~> 1.0.4)
+  - DWPlayer (0.0.0.5)
+  - SDWebImage (5.5.2):
+    - SDWebImage/Core (= 5.5.2)
+  - SDWebImage/Core (5.5.2)
+  - YYImage (1.0.4):
+    - YYImage/Core (= 1.0.4)
+  - YYImage/Core (1.0.4)
+
+DEPENDENCIES:
+  - DWKit/DWComponent/DWLabel
+  - DWMediaPreviewController (from `../`)
+  - SDWebImage
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - DWKit
+    - DWPlayer
+    - SDWebImage
+    - YYImage
+
+EXTERNAL SOURCES:
+  DWMediaPreviewController:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  DWKit: bcb486754a7c6421ce76ee828f69d9d0dd8ae8fc
+  DWMediaPreviewController: a0212cd7b504d6b8c2221260cef843a842251320
+  DWPlayer: 489f2116280123fdf4f53cf94893bb4a0f017cc1
+  SDWebImage: 4d5c027c935438f341ed33dbac53ff9f479922ca
+  YYImage: 1e1b62a9997399593e4b9c4ecfbbabbf1d3f3b54
+
+PODFILE CHECKSUM: 724825a963b7fdce4690199ebcf61a402b477815
+
+COCOAPODS: 1.7.5
