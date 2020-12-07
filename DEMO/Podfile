@@ -1,5 +1,5 @@
 source 'https://github.com/CocoaPods/Specs.git'
-target 'DWMediaPreviewController' do
+target 'DEMO' do
 pod 'DWMediaPreviewController', :path => '../'
 pod 'SDWebImage'
 pod 'DWKit/DWComponent/DWLabel'

@@ -383,6 +383,68 @@ typedef NS_ENUM(NSUInteger, DWImagePanDirectionType) {
     }
 }
 
+#pragma mark --- tool func ---
+static CGFloat fixValue(CGFloat value) {
+    static CGFloat scale = 0;
+    static CGFloat factor = 0;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        scale = [UIScreen mainScreen].scale?:2;
+        factor = 1.0 / scale;
+    });
+    
+    ///寻找两侧边界值
+    CGFloat minBoundary = floor(value);
+    while (minBoundary + factor <= value) {
+        minBoundary += factor;
+    }
+    
+    CGFloat maxBoundary = ceil(value);
+    while (maxBoundary - factor > value) {
+        maxBoundary -= factor;
+    }
+    
+    ///选择一个近的边界值
+    if (maxBoundary - value > value - minBoundary) {
+        value = minBoundary;
+    } else {
+        value = maxBoundary;
+    }
+    
+    return value;
+}
+
+static BOOL needFixValue(CGFloat value,CGFloat target) {
+    static CGFloat scale = 0;
+    static CGFloat factor = 0;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        scale = [UIScreen mainScreen].scale?:2;
+        factor = 0.5 / scale;
+    });
+    
+    if (ABS(value - target) > factor) {
+        return YES;
+    }
+    return NO;
+}
+
+static BOOL greaterNeedFixValue(CGFloat value,CGFloat target) {
+    BOOL needFix = needFixValue(value, target);
+    if (needFix && value > target) {
+        return YES;
+    }
+    return NO;
+}
+
+static BOOL lessNeedFixValue(CGFloat value,CGFloat target) {
+    BOOL needFix = needFixValue(value, target);
+    if (needFix && value < target) {
+        return YES;
+    }
+    return NO;
+}
+
 #pragma mark --- scroll delegate ---
 -(UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
     return self.zoomView;
@@ -434,36 +496,47 @@ typedef NS_ENUM(NSUInteger, DWImagePanDirectionType) {
             case DWMediaPreviewZoomTypeHorizontal:
             {
                 ///小于偏好缩放比时屏幕纵向方向上仍能显示完成，所以将图片锁定在纵向居中
+                CGFloat target = 0;
                 if (scrollView.zoomScale < _preferredZoomScale) {
-                    CGFloat target = scrollView.contentSize.height * 0.5 - scrollView.bounds.size.height * 0.5;
-                    if (scrollView.contentOffset.y != target) {
+                    ///由于didScroll不会scroll至连续至，只能scroll至最小单位精度。例如 [UIScreen mainScreen].scale = 2; 那么最小精度为0.5；及scroll的contentOffset的可选值在0/0.5/1之间。如果scale为3，则在0/0.3333/0.6666/1之间。故先计算目标值，然后近似成为最近的可选值。例scale为2的时候实际值为0.6时，修正为0.5即为目标值。
+                    target = fixValue(scrollView.contentSize.height * 0.5 - scrollView.bounds.size.height * 0.5);
+                    ///此时要将contentOffset修正为目标值。这里首先要判断是否相等，但是不能用 == 。因为由于精度问题可能不相等。比如：scale为3时，系统给出的contentOffset只可能时0/0.3333/0.6666/1，我们计算的也只可能时0/0.3333/0.6666/1。但是由于精度问题，不一定完全相等。实际误差应该特别小，为了简便运算，认为小于半个精度的误差都为相等。如果不相等，就要设置contentOffset为修正值
+                    if (needFixValue(scrollView.contentOffset.y, target)) {
                         scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, target);
                     }
                 } else if (_scrollIsZooming) {
                     ///大于缩放比以后为了避免看到黑边还是要监测纵向偏移量的两个临界值
-                    if (scrollView.contentOffset.y < self.fixStartAnchor * scrollView.zoomScale) {
-                        [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, self.fixStartAnchor * scrollView.zoomScale)];
-                    } else if (scrollView.contentOffset.y > self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.height) {
-                        [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.height)];
+                    target = fixValue(self.fixStartAnchor * scrollView.zoomScale);
+                    if (lessNeedFixValue(scrollView.contentOffset.y, target)) {
+                        [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, target)];
+                    } else {
+                        target = fixValue(self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.height);
+                        if (greaterNeedFixValue(scrollView.contentOffset.y, target)) {
+                            [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, target)];
+                        }
                     }
                 }
-                
             }
                 break;
             case DWMediaPreviewZoomTypeVertical:
             {
                 ///小于偏好缩放比时屏幕纵向方向上仍能显示完成，所以将图片锁定在纵向居中
+                CGFloat target = 0;
                 if (scrollView.zoomScale < _preferredZoomScale) {
-                    CGFloat target = scrollView.contentSize.width * 0.5 - scrollView.bounds.size.width * 0.5;
-                    if (scrollView.contentOffset.x != target) {
+                    target = fixValue(scrollView.contentSize.width * 0.5 - scrollView.bounds.size.width * 0.5);
+                    if (needFixValue(scrollView.contentOffset.x, target)) {
                         scrollView.contentOffset = CGPointMake(target, scrollView.contentOffset.y);
                     }
                 } else if (_scrollIsZooming) {
                     ///大于缩放比以后为了避免看到黑边还是要监测纵向偏移量的两个临界值
-                    if (scrollView.contentOffset.x < self.fixStartAnchor * scrollView.zoomScale) {
-                        [scrollView setContentOffset:CGPointMake(self.fixStartAnchor * scrollView.zoomScale, scrollView.contentOffset.y)];
-                    } else if (scrollView.contentOffset.x > self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.width) {
-                        [scrollView setContentOffset:CGPointMake(self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.width, scrollView.contentOffset.y)];
+                    target = fixValue(self.fixStartAnchor * scrollView.zoomScale);
+                    if (lessNeedFixValue(scrollView.contentOffset.x, target)) {
+                        [scrollView setContentOffset:CGPointMake(target, scrollView.contentOffset.y)];
+                    } else {
+                        target = fixValue(self.fixEndAnchor * scrollView.zoomScale - scrollView.bounds.size.width);
+                        if (greaterNeedFixValue(scrollView.contentOffset.x, target)) {
+                            [scrollView setContentOffset:CGPointMake(target, scrollView.contentOffset.y)];
+                        }
                     }
                 }
             }

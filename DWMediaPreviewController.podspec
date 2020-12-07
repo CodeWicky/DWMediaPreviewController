@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name = 'DWMediaPreviewController'
-s.version = '0.0.0.45'
+s.version = '0.0.0.46'
 s.license = { :type => 'MIT', :file => 'LICENSE' }
 s.summary = '一个媒体预览库，高仿系统相册风格。Media preview frameworks.'
 s.homepage = 'https://github.com/CodeWicky/DWMediaPreviewController'

@@ -1,6 +1,6 @@
 {
   "name": "DWMediaPreviewController",
-  "version": "0.0.0.36",
+  "version": "0.0.0.46",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -12,7 +12,7 @@
   },
   "source": {
     "git": "https://github.com/CodeWicky/DWMediaPreviewController.git",
-    "tag": "0.0.0.36"
+    "tag": "0.0.0.46"
   },
   "requires_arc": true,
   "platforms": {
